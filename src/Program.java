@@ -2,22 +2,28 @@ import processing.core.PApplet;
 import processing.event.KeyEvent;
 
 import javax.xml.soap.Text;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Program extends PApplet {
     private ArrayList<TextObject> textObjects = new ArrayList<>();
     private String typedWord = "";
+    private Client client;
 
     public static void main(String[] args) {
         PApplet.main("Program");
-
 
     }
 
     @Override
     public void setup() {
-
+        client = new Client();
+        try {
+            client.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         textObjects.add(new TextObject("test", 1000));
         textObjects.add(new TextObject("test1", 2000));
         textObjects.add(new TextObject("test2", 3000));
@@ -40,7 +46,6 @@ public class Program extends PApplet {
     @Override
     public void draw() {
         background(0);
-
         for (TextObject t : textObjects) {
             t.update();
         }
