@@ -1,51 +1,82 @@
 import processing.core.PApplet;
-import processing.event.KeyEvent;
 
-import javax.xml.soap.Text;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.List;
 
-public class Program extends PApplet {
+public class Program extends PApplet implements ReaderListener {
     private ArrayList<TextObject> textObjects = new ArrayList<>();
     private String typedWord = "";
     private Client client;
+    private boolean showScore;
+    private String myScore;
+    private String scoreName;
+
+    private String connectedName;
 
     public static void main(String[] args) {
         PApplet.main("Program");
+    }
 
+    private List<TextObject> newObjects = new ArrayList<>();
+
+    @Override
+    public void onCreateWord(String word, int timeout) {
+        System.out.println(word + " --- " + timeout);
+
+        newObjects.add(new TextObject(word, timeout));
+    }
+
+    @Override
+    public void onDestroyWord(String word) {
+        checkAnswer(word);
+    }
+
+    @Override
+    public void onShowScore(String username, String score) {
+        showScore = true;
+        myScore = score;
+        scoreName = username;
+    }
+
+    @Override
+    public void onShowConnected(String username) {
+        connectedName = username;
     }
 
     @Override
     public void setup() {
         client = new Client();
         try {
-            client.connect();
+            client.connect(this);
+            client.setUserName("dongwon");
         } catch (IOException e) {
             e.printStackTrace();
+            exit();
         }
-        textObjects.add(new TextObject("test", 1000));
-        textObjects.add(new TextObject("test1", 2000));
-        textObjects.add(new TextObject("test2", 3000));
-        textObjects.add(new TextObject("test3", 4000));
-        textObjects.add(new TextObject("test4", 5000));
-        textObjects.add(new TextObject("test5", 6000));
-        textObjects.add(new TextObject("test6", 7000));
-        textObjects.add(new TextObject("test7", 8000));
-        textObjects.add(new TextObject("test8", 9000));
-        textObjects.add(new TextObject("test9", 10000));
-
     }
 
     @Override
     public void settings() {
         super.settings();
-        size(800, 600);
+        size(1000, 600);
     }
 
     @Override
     public void draw() {
         background(0);
+
+        textObjects.addAll(newObjects);
+        newObjects = new ArrayList<>();
+
+        if (connectedName != null) {
+            text(connectedName + " connected ",800,480);
+        }
+
+        if (showScore) {
+            text(scoreName + " : " + myScore, 800, 500);
+        }
+
         for (TextObject t : textObjects) {
             t.update();
         }
@@ -66,12 +97,17 @@ public class Program extends PApplet {
     public void keyPressed() {
 
         if (key == ENTER) {
-            checkAnswer(typedWord);
+
+            try {
+                client.matchWord(typedWord);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println(typedWord);
             typedWord = "";
         } else {
             typedWord += key;
         }
-        System.out.println(typedWord);
     }
 
     public void checkAnswer(String typedWord) {
